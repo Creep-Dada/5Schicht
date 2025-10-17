@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schichtkalender Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 1cm;
+            }
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* New, highly visible animated border for any calendar entry */
+        @keyframes animated-gradient-border {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        .has-entry-animation {
+            position: relative;
+            z-index: 0; /* Create stacking context */
+        }
+
+        .has-entry-animation::before {
+            content: '';
+            position: absolute;
+            top: -3px; left: -3px;
+            right: -3px; bottom: -3px;
+            background: linear-gradient(120deg, #84fab0, #8fd3f4, #f794a4, #fddb92, #84fab0);
+            background-size: 400% 400%;
+            animation: animated-gradient-border 4s ease infinite;
+            z-index: -1; /* Place it behind the element's content */
+            border-radius: 8px; /* Slightly larger than the parent's rounded-md */
+            opacity: 0.9;
+        }
+        
+        .dark .has-entry-animation::before {
+           opacity: 0.7;
+        }
+
+
+        /* Sliding (marquee) animation for note/birthday text */
+        @keyframes marquee-text {
+            0%   { transform: translateX(100%); }
+            100% { transform: translateX(-120%); } /* Go a bit further to disappear completely */
+        }
+        .animate-note-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee-text 8s linear infinite;
+            padding-left: 100%;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

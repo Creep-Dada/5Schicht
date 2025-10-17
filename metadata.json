@@ -1,0 +1,5 @@
+{
+  "name": "Copy of 5Schicht 1.2",
+  "description": "Eine interaktive Schichtkalender-Anwendung zum Planen, Verwalten und Visualisieren von Schichtplänen mit Ereignis- und Feiertagsintegration. Alle Daten werden lokal im Browser gespeichert.",
+  "requestFramePermissions": []
+}
