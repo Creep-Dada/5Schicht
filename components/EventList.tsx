@@ -104,7 +104,7 @@ const EventList: React.FC<EventListProps> = ({ events, birthdays, year, getShift
     
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-        <details className="group" open={hasEvents}>
+        <details className="group">
             <summary className="flex justify-between items-center p-4 font-medium cursor-pointer list-none">
                 <h2 className="text-2xl font-bold">Meine Einträge</h2>
                 <span className="transition-transform duration-300 group-open:rotate-180 text-gray-600 dark:text-gray-400">
@@ -122,7 +122,7 @@ const EventList: React.FC<EventListProps> = ({ events, birthdays, year, getShift
                             const yearNum = firstItemDate.getFullYear();
 
                             return (
-                                <details key={monthKey} className="group" open>
+                                <details key={monthKey} className="group">
                                     <summary className="flex justify-between items-center p-2 rounded-md cursor-pointer list-none bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                                         <span className="font-bold text-gray-800 dark:text-gray-200">{monthName} {yearNum} ({monthItems.length})</span>
                                         <span className="transition-transform duration-300 group-open:rotate-180 text-gray-600 dark:text-gray-400">

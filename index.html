@@ -21,6 +21,10 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
+            /* Hide the animated border effect when printing */
+            .animated-border-base::before {
+                display: none;
+            }
         }
         
         /* Keyframes for the animated gradient border */

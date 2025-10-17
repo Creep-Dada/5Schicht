@@ -93,13 +93,11 @@ const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shi
                 if (event?.note && event.note.trim() !== '') displayTextParts.push(`📝 ${event.note.trim()}`);
                 if (holiday) displayTextParts.push(`🎉 ${holiday}`);
                 
-                const combinedText = displayTextParts.join(' | ');
-
                 return (
                   <div
                     key={dateKey}
                     onClick={() => onDayClick(date, shift)}
-                    className={`relative p-1 h-24 flex flex-col rounded-md cursor-pointer transition-transform transform hover:scale-105 print:h-24 print:p-1 print:border print:border-gray-300 print:rounded-none print:shadow-none print:bg-white print:border-l-4 print-border-${shift} ${isToday ? 'ring-2 ring-blue-500' : ''} ${holiday ? 'border-2 border-red-500' : 'border-2 border-transparent'} ${entryAnimationClass}`}
+                    className={`relative p-1 h-24 flex flex-col rounded-md cursor-pointer transition-transform transform hover:scale-105 print:h-auto print:min-h-24 print:p-1 print:rounded-none print:shadow-none print:bg-white print:border-l-4 print-border-${shift} ${isToday ? 'ring-2 ring-blue-500' : ''} ${holiday ? 'border-2 border-red-500 print:border-2 print:border-red-500' : 'border-2 border-transparent print:border print:border-gray-300'} ${entryAnimationClass}`}
                     style={{ backgroundColor: bgColor }}
                   >
                     {/* Top: Date Number */}
@@ -109,12 +107,25 @@ const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shi
                     
                     {/* Middle: Content (takes up remaining space) */}
                     <div className="flex-grow flex flex-col items-center justify-center text-center overflow-hidden z-10">
-                       {combinedText && (
-                          <div className="w-full overflow-hidden">
-                              <p className={`event-text text-xs font-semibold leading-tight px-1 animate-note-marquee ${textColor} print:text-black`} title={combinedText}>
-                                {combinedText}
+                       {/* --- Screen View: Marquee --- */}
+                       {displayTextParts.length > 0 && (
+                          <div className="w-full overflow-hidden print:hidden">
+                              <p className={`event-text text-xs font-semibold leading-tight px-1 animate-note-marquee ${textColor}`} title={displayTextParts.join(' | ')}>
+                                {displayTextParts.join(' | ')}
                               </p>
                           </div>
+                      )}
+                      {/* --- Print View: Stacked List --- */}
+                      {displayTextParts.length > 0 && (
+                        <div className="hidden print:flex w-full h-full items-start text-left p-1">
+                            <ul className="list-none m-0 p-0 space-y-0.5 w-full">
+                                {displayTextParts.map((part, index) => (
+                                    <li key={index} className="event-text text-[9px] leading-snug text-black whitespace-normal break-words">
+                                        {part}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                       )}
                     </div>
 
