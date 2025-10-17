@@ -23,37 +23,55 @@
             }
         }
         
-        /* New, highly visible animated border for any calendar entry */
+        /* Keyframes for the animated gradient border */
         @keyframes animated-gradient-border {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
 
-        .has-entry-animation {
+        /* Base class for the animated border container */
+        .animated-border-base {
             position: relative;
-            z-index: 0; /* Create stacking context */
+            z-index: 0;
         }
 
-        .has-entry-animation::before {
+        /* Base styles for the pseudo-element creating the border */
+        .animated-border-base::before {
             content: '';
             position: absolute;
             top: -3px; left: -3px;
             right: -3px; bottom: -3px;
-            background: linear-gradient(120deg, #84fab0, #8fd3f4, #f794a4, #fddb92, #84fab0);
             background-size: 400% 400%;
             animation: animated-gradient-border 4s ease infinite;
-            z-index: -1; /* Place it behind the element's content */
-            border-radius: 8px; /* Slightly larger than the parent's rounded-md */
+            z-index: -1;
+            border-radius: 8px;
             opacity: 0.9;
         }
         
-        .dark .has-entry-animation::before {
+        .dark .animated-border-base::before {
            opacity: 0.7;
         }
 
+        /* Color-specific gradients for different event types */
+        .animated-border-personal-vacation::before {
+            background: linear-gradient(120deg, #48c6ef, #6f86d6, #11998e, #38ef7d, #48c6ef);
+        }
+        .animated-border-afz::before {
+            background: linear-gradient(120deg, #f093fb, #f5576c, #9b59b6, #e040fb, #f093fb);
+        }
+        .animated-border-colleague-vacation::before {
+            background: linear-gradient(120deg, #f6d365, #fda085, #ff8c00, #f8a521, #f6d365);
+        }
+        .animated-border-birthday::before {
+            background: linear-gradient(120deg, #fce38a, #f38181, #ff9a9e, #fad0c4, #fce38a);
+        }
+        .animated-border-note::before {
+            background: linear-gradient(120deg, #84fab0, #8fd3f4, #29b6f6, #4fc3f7, #84fab0);
+        }
 
-        /* Sliding (marquee) animation for note/birthday text */
+
+        /* Sliding (marquee) animation for note/birthday/holiday text */
         @keyframes marquee-text {
             0%   { transform: translateX(100%); }
             100% { transform: translateX(-120%); } /* Go a bit further to disappear completely */
@@ -63,6 +81,17 @@
             white-space: nowrap;
             animation: marquee-text 8s linear infinite;
             padding-left: 100%;
+        }
+
+        /* Styles for Large Text Mode */
+        .large-text .date-number { /* Date number in cell */
+            font-size: 1.25rem; 
+        }
+        .large-text .event-text { /* Note/birthday/holiday text */
+            font-size: 1rem;
+        }
+        .large-text .shift-name { /* Shift name in cell */
+            font-size: 0.95rem; 
         }
     </style>
 <script type="importmap">

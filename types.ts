@@ -13,6 +13,7 @@ export interface EventData {
   isAfz?: boolean;
   isBirthday?: boolean;
   birthdayName?: string;
+  isPersonalVacation?: boolean;
 }
 
 export interface Holiday {

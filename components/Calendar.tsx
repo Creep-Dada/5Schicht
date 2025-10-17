@@ -10,9 +10,10 @@ interface CalendarProps {
   shiftColors: Record<Shift, { light: string; dark: string }>;
   isDarkMode: boolean;
   weekStartsOnMonday: boolean;
+  showPastMonths: boolean;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shiftColors, isDarkMode, weekStartsOnMonday }) => {
+const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shiftColors, isDarkMode, weekStartsOnMonday, showPastMonths }) => {
   const monthsData = useMemo(() => {
     const dataByMonth: CalendarDayData[][] = Array.from({ length: 12 }, () => []);
     if (!calendarData || calendarData.length === 0) {
@@ -28,10 +29,13 @@ const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shi
 
   const DAY_NAMES = weekStartsOnMonday ? DAY_NAMES_MON_START : DAY_NAMES_SUN_START;
   
-  const getEntryAnimationClass = (eventData?: EventData, birthday?: { name: string }): string => {
-    if (!eventData && !birthday) return '';
-    const hasContent = (eventData?.note && eventData.note.trim() !== '') || eventData?.hasVacation || eventData?.isAfz || birthday;
-    return hasContent ? 'has-entry-animation' : '';
+  const getAnimationColorClass = (event?: EventData, birthday?: { name: string }): string => {
+      if (event?.isPersonalVacation) return 'animated-border-personal-vacation';
+      if (event?.isAfz) return 'animated-border-afz';
+      if (event?.hasVacation) return 'animated-border-colleague-vacation';
+      if (birthday) return 'animated-border-birthday';
+      if (event?.note && event.note.trim() !== '') return 'animated-border-note';
+      return '';
   };
 
   if (!calendarData || calendarData.length === 0) {
@@ -43,9 +47,17 @@ const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shi
     );
   }
 
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
       {monthsData.map((monthData, monthIndex) => {
+        if (!showPastMonths && year === currentYear && monthIndex < currentMonth) {
+            return null;
+        }
+
         if (monthData.length === 0) {
           return null;
         }
@@ -55,7 +67,7 @@ const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shi
         const emptyDays = Array.from({ length: emptyDaysCount });
 
         return (
-          <div key={monthIndex} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg break-inside-avoid">
+          <div key={monthIndex} id={`month-${monthIndex}`} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg break-inside-avoid">
             <h3 className="text-xl font-bold text-center mb-4">{MONTH_NAMES[monthIndex]} {year}</h3>
             <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-600 dark:text-gray-400 print:text-black">
               {DAY_NAMES.map(day => <div key={day}>{day}</div>)}
@@ -70,11 +82,18 @@ const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shi
                 const textColor = getTextColorForBg(bgColor);
 
                 const isToday = new Date().toDateString() === date.toDateString();
-                const entryAnimationClass = getEntryAnimationClass(event, birthday);
+                const animationColorClass = getAnimationColorClass(event, birthday);
+                const entryAnimationClass = animationColorClass ? `animated-border-base ${animationColorClass}` : '';
 
-                const hasNote = event?.note && event.note.trim() !== '';
-                const noteText = hasNote ? event.note.split(' ').slice(0, 5).join(' ') : '';
-
+                const displayTextParts: string[] = [];
+                if (birthday) displayTextParts.push(`🎂 ${birthday.name}`);
+                if (event?.isPersonalVacation) displayTextParts.push('🌴 Persönlicher Urlaub');
+                if (event?.isAfz) displayTextParts.push('AFZ');
+                if (event?.hasVacation) displayTextParts.push(`🤝 Kollege Urlaub`);
+                if (event?.note && event.note.trim() !== '') displayTextParts.push(`📝 ${event.note.trim()}`);
+                if (holiday) displayTextParts.push(`🎉 ${holiday}`);
+                
+                const combinedText = displayTextParts.join(' | ');
 
                 return (
                   <div
@@ -84,33 +103,23 @@ const Calendar: React.FC<CalendarProps> = ({ year, calendarData, onDayClick, shi
                     style={{ backgroundColor: bgColor }}
                   >
                     {/* Top: Date Number */}
-                    <div className={`text-center font-bold text-sm ${textColor} print:text-black z-10`}>
+                    <div className={`date-number text-center font-bold text-sm ${textColor} print:text-black z-10`}>
                       {date.getDate()}
                     </div>
                     
                     {/* Middle: Content (takes up remaining space) */}
                     <div className="flex-grow flex flex-col items-center justify-center text-center overflow-hidden z-10">
-                       {hasNote ? (
+                       {combinedText && (
                           <div className="w-full overflow-hidden">
-                              <p className={`text-xs font-semibold leading-tight px-1 animate-note-marquee ${textColor} print:text-black`} title={event.note}>
-                                {noteText}
+                              <p className={`event-text text-xs font-semibold leading-tight px-1 animate-note-marquee ${textColor} print:text-black`} title={combinedText}>
+                                {combinedText}
                               </p>
                           </div>
-                      ) : birthday ? (
-                          <div className="w-full overflow-hidden">
-                              <p className={`text-xs font-semibold leading-tight px-1 animate-note-marquee ${textColor} print:text-black`} title={birthday.name}>
-                                  🎂 {birthday.name}
-                              </p>
-                          </div>
-                      ) : holiday ? (
-                        <p className={`text-xs font-semibold leading-tight px-1 truncate ${textColor} print:text-black`} title={holiday}>
-                          {holiday}
-                        </p>
-                      ) : null}
+                      )}
                     </div>
 
                     {/* Bottom: Shift Name */}
-                    <div className={`text-right text-xs font-medium pr-1 ${textColor} print:text-black z-10`}>
+                    <div className={`shift-name text-right text-xs font-medium pr-1 ${textColor} print:text-black z-10`}>
                       {event?.isAfz ? 'AFZ' : shift}
                     </div>
                   </div>

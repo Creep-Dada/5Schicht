@@ -13,15 +13,19 @@ interface HeaderProps {
     setManualDate: (date: string) => void;
     showHolidays: boolean;
     setShowHolidays: (show: boolean) => void;
+    showPastMonths: boolean;
+    setShowPastMonths: (show: boolean) => void;
     onGenerate: () => void;
     isDarkMode: boolean;
     setIsDarkMode: (isDark: boolean) => void;
     onOpenSettings: () => void;
+    onOpenVacationModal: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
     year, setYear, startMethod, setStartMethod, group, setGroup, manualDate, setManualDate,
-    showHolidays, setShowHolidays, onGenerate, isDarkMode, setIsDarkMode, onOpenSettings
+    showHolidays, setShowHolidays, showPastMonths, setShowPastMonths, onGenerate, isDarkMode, 
+    setIsDarkMode, onOpenSettings, onOpenVacationModal
 }) => {
     const [isManualInputFocused, setIsManualInputFocused] = useState(false);
 
@@ -88,35 +92,62 @@ const Header: React.FC<HeaderProps> = ({
 
                 {/* Right Side: Actions & Toggles */}
                 <div className="flex flex-col items-stretch lg:items-end gap-4">
-                    <button
-                        onClick={onGenerate}
-                        className="w-full lg:w-auto bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-blue-700 transition duration-300"
-                    >
-                        Kalender erstellen
-                    </button>
-                    <div className="flex items-center justify-between lg:justify-end gap-4 border-t dark:border-gray-700 lg:border-none pt-4 lg:pt-0">
-                         <div className="flex items-center">
-                            <span className="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">Feiertage</span>
-                            <button
-                                onClick={() => setShowHolidays(!showHolidays)}
-                                className={`${showHolidays ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                                role="switch"
-                                aria-checked={showHolidays}
-                                aria-label="Feiertage anzeigen oder verbergen"
-                            >
-                                <span className={`${showHolidays ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                            </button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                            onClick={onOpenVacationModal}
+                            className="w-full lg:w-auto bg-teal-600 text-white font-bold py-2 px-6 rounded-md hover:bg-teal-700 transition duration-300"
+                        >
+                            Urlaub eintragen
+                        </button>
+                        <button
+                            onClick={onGenerate}
+                            className="w-full lg:w-auto bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-blue-700 transition duration-300"
+                        >
+                            Kalender erstellen
+                        </button>
+                    </div>
+                    <div className="w-full flex flex-col items-stretch lg:items-end gap-2 border-t dark:border-gray-700 lg:border-none pt-4 lg:pt-0">
+                        {/* Toggles row */}
+                        <div className="flex flex-row items-center justify-between lg:justify-end gap-4 w-full">
+                            <div className="flex items-center">
+                                <span className="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">Feiertage</span>
+                                <button
+                                    onClick={() => setShowHolidays(!showHolidays)}
+                                    className={`${showHolidays ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                                    role="switch"
+                                    aria-checked={showHolidays}
+                                    aria-label="Feiertage anzeigen oder verbergen"
+                                >
+                                    <span className={`${showHolidays ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                                </button>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">Vergangene Monate</span>
+                                <button
+                                    onClick={() => setShowPastMonths(!showPastMonths)}
+                                    className={`${showPastMonths ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                                    role="switch"
+                                    aria-checked={showPastMonths}
+                                    aria-label="Vergangene Monate anzeigen oder verbergen"
+                                >
+                                    <span className={`${showPastMonths ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex items-center space-x-1">
-                             <button onClick={() => window.print()} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Drucken">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" /></svg>
-                            </button>
-                            <button onClick={onOpenSettings} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Einstellungen">
-                                <CogIcon />
-                            </button>
-                             <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Toggle Dark Mode">
-                                {isDarkMode ? <SunIcon /> : <MoonIcon />}
-                            </button>
+
+                        {/* Icons row */}
+                        <div className="flex items-center justify-center sm:justify-end w-full">
+                             <div className="flex items-center space-x-1">
+                                 <button onClick={() => window.print()} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Drucken">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" /></svg>
+                                </button>
+                                <button onClick={onOpenSettings} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Einstellungen">
+                                    <CogIcon />
+                                </button>
+                                 <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Toggle Dark Mode">
+                                    {isDarkMode ? <SunIcon /> : <MoonIcon />}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

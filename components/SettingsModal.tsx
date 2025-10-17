@@ -11,9 +11,11 @@ interface SettingsModalProps {
   onClose: () => void;
   weekStartsOnMonday: boolean;
   setWeekStartsOnMonday: (value: boolean) => void;
+  isLargeText: boolean;
+  setIsLargeText: (value: boolean) => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ currentColors, onSave, onClose, weekStartsOnMonday, setWeekStartsOnMonday }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ currentColors, onSave, onClose, weekStartsOnMonday, setWeekStartsOnMonday, isLargeText, setIsLargeText }) => {
   const [colors, setColors] = useState<ShiftColors>(currentColors);
 
   const handleColorChange = (shift: Shift, theme: 'light' | 'dark', value: string) => {
@@ -53,6 +55,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ currentColors, onSave, on
                     aria-checked={weekStartsOnMonday}
                 >
                     <span className={`${weekStartsOnMonday ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+                <label htmlFor="large-text-toggle" className="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                    Schrift vergrößern
+                </label>
+                <button
+                    id="large-text-toggle"
+                    onClick={() => setIsLargeText(!isLargeText)}
+                    className={`${isLargeText ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                    role="switch"
+                    aria-checked={isLargeText}
+                >
+                    <span className={`${isLargeText ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
                 </button>
             </div>
             

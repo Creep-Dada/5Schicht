@@ -5,6 +5,7 @@ import Calendar from './components/Calendar';
 import EventModal from './components/EventModal';
 import EventList from './components/EventList';
 import SettingsModal from './components/SettingsModal';
+import VacationModal from './components/VacationModal';
 import { fetchHolidays } from './services/holidayService';
 import { Shift, EventData, CalendarDayData, Birthday } from './types';
 import { SHIFT_CYCLE, GROUP_REFERENCE_DATES, DEFAULT_SHIFT_COLORS } from './constants';
@@ -19,6 +20,8 @@ const App: React.FC = () => {
     const [showHolidays, setShowHolidays] = useLocalStorage('sc-showHolidays', false);
     const [isDarkMode, setIsDarkMode] = useLocalStorage('sc-darkMode', false);
     const [weekStartsOnMonday, setWeekStartsOnMonday] = useLocalStorage('sc-weekStartsOnMonday', true);
+    const [isLargeText, setIsLargeText] = useLocalStorage('sc-isLargeText', false);
+    const [showPastMonths, setShowPastMonths] = useLocalStorage('sc-showPastMonths', false);
     
     const [events, setEvents] = useLocalStorage<Record<string, EventData>>('sc-events', {});
     const [birthdays, setBirthdays] = useLocalStorage<Birthday[]>('sc-birthdays', []);
@@ -29,6 +32,7 @@ const App: React.FC = () => {
     
     const [modalInfo, setModalInfo] = useState<{ date: Date; shift: Shift } | null>(null);
     const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+    const [isVacationModalOpen, setVacationModalOpen] = useState(false);
 
     // --- Effects ---
     useEffect(() => {
@@ -82,6 +86,26 @@ const App: React.FC = () => {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Effect for auto-scrolling to the current month
+    useEffect(() => {
+        if (calendarData.length > 0 && !showPastMonths) {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonthIndex = now.getMonth();
+
+            if (year === currentYear) {
+                const timer = setTimeout(() => {
+                    const monthElement = document.getElementById(`month-${currentMonthIndex}`);
+                    if (monthElement) {
+                        monthElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [calendarData, year, showPastMonths]);
+
 
     // --- Core Logic ---
     const getStartDate = useCallback(() => {
@@ -154,8 +178,8 @@ const App: React.FC = () => {
     const handleSaveEvent = (dateKey: string, eventData: EventData) => {
         setEvents(prevEvents => {
             const newEvents = { ...prevEvents };
-             // An event is valid if it has a note, vacation, or AFZ.
-            if (!eventData.note.trim() && !eventData.hasVacation && !eventData.isAfz) {
+             // An event is valid if it has content.
+            if (!eventData.note.trim() && !eventData.hasVacation && !eventData.isAfz && !eventData.isPersonalVacation) {
                 delete newEvents[dateKey];
             } else {
                 newEvents[dateKey] = eventData;
@@ -187,6 +211,57 @@ const App: React.FC = () => {
         const day = date.getDate();
         setBirthdays(prev => prev.filter(b => b.month !== month || b.day !== day));
     };
+    
+    const handleSaveVacation = (from: string, to: string) => {
+        const startDate = new Date(from);
+        const endDate = new Date(to);
+        const cycleStartDate = getStartDate();
+
+        if (!cycleStartDate) {
+            alert('Kalendereinstellungen nicht gefunden. Bitte zuerst den Kalender generieren.');
+            return;
+        }
+
+        setEvents(prevEvents => {
+            const newEvents = { ...prevEvents };
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const currentDate = new Date(d);
+                const shiftForDay = calculateShiftForDate(currentDate, cycleStartDate);
+                
+                // Nur als Urlaub markieren, wenn es kein freier Tag ist
+                if (shiftForDay !== Shift.Frei) {
+                    const dateKey = toISODateString(currentDate);
+                    const existingEvent = newEvents[dateKey] || { note: '', hasVacation: false, colleagues: [] };
+                    newEvents[dateKey] = { ...existingEvent, isPersonalVacation: true };
+                }
+            }
+            return newEvents;
+        });
+        setVacationModalOpen(false);
+    };
+
+    const handleDeleteVacationBlock = (from: Date, to: Date) => {
+        setEvents(prevEvents => {
+            const newEvents = { ...prevEvents };
+            for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+                const dateKey = toISODateString(new Date(d));
+                if (newEvents[dateKey]) {
+                    const existingEvent = newEvents[dateKey];
+                    // Create a new object with the personal vacation flag removed
+                    const { isPersonalVacation, ...restOfEvent } = existingEvent;
+                    
+                    // If the event now has no other meaningful data, remove it entirely
+                    if (!restOfEvent.note?.trim() && !restOfEvent.hasVacation && !restOfEvent.isAfz) {
+                         delete newEvents[dateKey];
+                    } else {
+                        // Otherwise, just update it without the vacation flag
+                        newEvents[dateKey] = restOfEvent;
+                    }
+                }
+            }
+            return newEvents;
+        });
+    };
 
     
     const handleEditFromList = (date: Date, shift: Shift) => {
@@ -201,7 +276,7 @@ const App: React.FC = () => {
 
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 min-h-screen">
+        <div className={`bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 min-h-screen ${isLargeText ? 'large-text' : ''}`}>
             <div className="container mx-auto p-4 md:p-6 lg:p-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 print:hidden">5-Schicht</h1>
                 <Header
@@ -210,13 +285,26 @@ const App: React.FC = () => {
                     group={group} setGroup={setGroup}
                     manualDate={manualDate} setManualDate={setManualDate}
                     showHolidays={showHolidays} setShowHolidays={setShowHolidays}
+                    showPastMonths={showPastMonths} setShowPastMonths={setShowPastMonths}
                     onGenerate={generateCalendar}
                     isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}
                     onOpenSettings={() => setSettingsModalOpen(true)}
+                    onOpenVacationModal={() => setVacationModalOpen(true)}
                 />
 
-                <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <main className="lg:col-span-2">
+                <div className="mt-8 space-y-8">
+                    <div className="print:hidden">
+                        <EventList 
+                            events={events} 
+                            birthdays={birthdays}
+                            year={year}
+                            getShiftForDate={getShiftForDateForList} 
+                            onEdit={handleEditFromList} 
+                            onDelete={handleDeleteEvent}
+                            onDeleteVacationBlock={handleDeleteVacationBlock}
+                        />
+                    </div>
+                    <main>
                         <Calendar 
                             year={year} 
                             calendarData={calendarData} 
@@ -224,21 +312,9 @@ const App: React.FC = () => {
                             shiftColors={shiftColors}
                             isDarkMode={isDarkMode}
                             weekStartsOnMonday={weekStartsOnMonday}
+                            showPastMonths={showPastMonths}
                         />
                     </main>
-                    <aside className="lg:col-span-1 print:hidden">
-                        <div className="sticky top-8">
-                             <h2 className="text-2xl font-bold mb-4">Meine Einträge</h2>
-                            <EventList 
-                                events={events} 
-                                birthdays={birthdays}
-                                year={year}
-                                getShiftForDate={getShiftForDateForList} 
-                                onEdit={handleEditFromList} 
-                                onDelete={handleDeleteEvent}
-                            />
-                        </div>
-                    </aside>
                 </div>
 
 
@@ -256,6 +332,13 @@ const App: React.FC = () => {
                     />
                 )}
 
+                {isVacationModalOpen && (
+                    <VacationModal
+                        onSave={handleSaveVacation}
+                        onClose={() => setVacationModalOpen(false)}
+                    />
+                )}
+
                 {isSettingsModalOpen && (
                     <SettingsModal 
                         currentColors={shiftColors}
@@ -263,6 +346,8 @@ const App: React.FC = () => {
                         onClose={() => setSettingsModalOpen(false)}
                         weekStartsOnMonday={weekStartsOnMonday}
                         setWeekStartsOnMonday={setWeekStartsOnMonday}
+                        isLargeText={isLargeText}
+                        setIsLargeText={setIsLargeText}
                     />
                 )}
             </div>
